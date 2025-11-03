@@ -1,0 +1,112 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Bienvenido">
+  <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-white to-secondary-50">
+    <div class="text-center space-y-8 p-8 max-w-6xl mx-auto">
+      
+      <!-- Header -->
+      <div class="space-y-4">
+        <h1 class="text-7xl font-bold text-gray-900 tracking-tight">
+          🎯 <span class="bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">CERTIA</span>
+        </h1>
+        <p class="text-3xl font-semibold text-gray-700">
+          Sistema de Gestión de Certificados Profesionales
+        </p>
+        <p class="text-lg text-gray-600 max-w-3xl mx-auto leading-relaxed">
+          Diseñador visual avanzado • Multi-idioma (Español/Inglés/Árabe) • Exportación PDF profesional
+        </p>
+      </div>
+
+      <!-- Botones CTA -->
+      <div class="flex gap-4 justify-center mt-12">
+        <a href="/login" class="btn-primary text-lg px-10 py-4">
+          🔐 Iniciar Sesión
+        </a>
+        <a href="/register" class="btn-secondary text-lg px-10 py-4">
+          ✨ Registrarse
+        </a>
+      </div>
+
+      <!-- Features Cards -->
+      <div class="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        
+        <!-- Admin -->
+        <div class="card hover:shadow-xl transition-shadow duration-300">
+          <div class="text-6xl mb-4">👑</div>
+          <h3 class="text-2xl font-bold mb-3 text-gray-900">Administrador</h3>
+          <p class="text-gray-600 leading-relaxed">
+            Gestión completa de usuarios, roles y configuración del sistema
+          </p>
+          <div class="mt-4 text-sm text-primary-600 font-medium">
+            • Gestión de usuarios<br/>
+            • Asignación de roles<br/>
+            • Control total
+          </div>
+        </div>
+
+        <!-- Company -->
+        <div class="card hover:shadow-xl transition-shadow duration-300 border-2 border-primary-200">
+          <div class="text-6xl mb-4">🏢</div>
+          <h3 class="text-2xl font-bold mb-3 text-gray-900">Empresa</h3>
+          <p class="text-gray-600 leading-relaxed">
+            Diseñador visual de templates y gestión avanzada de formularios
+          </p>
+          <div class="mt-4 text-sm text-primary-600 font-medium">
+            • Diseñador visual<br/>
+            • Templates personalizados<br/>
+            • Exportación PDF
+          </div>
+        </div>
+
+        <!-- Client -->
+        <div class="card hover:shadow-xl transition-shadow duration-300">
+          <div class="text-6xl mb-4">👤</div>
+          <h3 class="text-2xl font-bold mb-3 text-gray-900">Cliente</h3>
+          <p class="text-gray-600 leading-relaxed">
+            Llenado fácil de formularios y seguimiento en tiempo real
+          </p>
+          <div class="mt-4 text-sm text-primary-600 font-medium">
+            • Llenado simple<br/>
+            • Seguimiento de envíos<br/>
+            • Notificaciones
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Features adicionales -->
+      <div class="mt-16 pt-16 border-t border-gray-200">
+        <h2 class="text-3xl font-bold mb-8 text-gray-900">
+          ✨ Características Destacadas
+        </h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+          <div>
+            <div class="text-3xl mb-2">🎨</div>
+            <p class="text-sm font-medium text-gray-700">Diseñador Visual</p>
+          </div>
+          <div>
+            <div class="text-3xl mb-2">🌍</div>
+            <p class="text-sm font-medium text-gray-700">Multi-idioma</p>
+          </div>
+          <div>
+            <div class="text-3xl mb-2">📄</div>
+            <p class="text-sm font-medium text-gray-700">Exportación PDF</p>
+          </div>
+          <div>
+            <div class="text-3xl mb-2">🔒</div>
+            <p class="text-sm font-medium text-gray-700">100% Seguro</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="mt-16 text-sm text-gray-500">
+        <p>Desarrollado con Astro + React + Tailwind CSS + Supabase</p>
+        <p class="mt-2">© 2025 CERTIA - Todos los derechos reservados</p>
+      </div>
+
+    </div>
+  </div>
+</BaseLayout>

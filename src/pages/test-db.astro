@@ -1,0 +1,10 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import TestConnection from '../components/TestConnection';
+---
+
+<BaseLayout title="Test de Conexión">
+  <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-gray-50 p-8">
+    <TestConnection client:load />
+  </div>
+</BaseLayout>

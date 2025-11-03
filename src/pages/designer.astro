@@ -1,0 +1,25 @@
+---
+import TemplateDesigner from '../components/designer/TemplateDesigner';
+---
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diseñador Visual | CERTIA</title>
+  <link rel="stylesheet" href="/src/styles/global.css">
+  <style>
+    html, body, #root {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="root" style="height: 100vh;">
+    <TemplateDesigner client:load />
+  </div>
+</body>
+</html>

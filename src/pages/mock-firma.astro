@@ -1,0 +1,455 @@
+---
+// Página que simula el portal de firma.gub.uy
+const { searchParams } = Astro.url;
+const transactionId = searchParams.get('transactionId');
+const submissionId = searchParams.get('submissionId');
+const fileName = searchParams.get('fileName');
+const documentName = searchParams.get('documentName');
+---
+
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Firma Digital - Sistema MOCK</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 600px;
+      width: 100%;
+      padding: 40px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .logo {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      margin: 0 auto 20px;
+      color: white;
+    }
+
+    h1 {
+      color: #1f2937;
+      font-size: 28px;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      color: #6b7280;
+      font-size: 14px;
+    }
+
+    .mock-badge {
+      display: inline-block;
+      background: #fef3c7;
+      color: #92400e;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    .document-info {
+      background: #f3f4f6;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 30px;
+    }
+
+    .document-info h3 {
+      color: #374151;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+
+    .info-label {
+      color: #6b7280;
+    }
+
+    .info-value {
+      color: #1f2937;
+      font-weight: 600;
+    }
+
+    .steps {
+      margin-bottom: 30px;
+    }
+
+    .step {
+      display: flex;
+      align-items: start;
+      margin-bottom: 20px;
+      padding: 15px;
+      background: #f9fafb;
+      border-radius: 10px;
+      transition: all 0.3s;
+    }
+
+    .step.active {
+      background: #eff6ff;
+      border: 2px solid #3b82f6;
+    }
+
+    .step-number {
+      width: 32px;
+      height: 32px;
+      background: #e5e7eb;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      margin-right: 15px;
+      flex-shrink: 0;
+    }
+
+    .step.active .step-number {
+      background: #3b82f6;
+      color: white;
+    }
+
+    .step.completed .step-number {
+      background: #10b981;
+      color: white;
+    }
+
+    .step-content h4 {
+      color: #374151;
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+
+    .step-content p {
+      color: #6b7280;
+      font-size: 12px;
+    }
+
+    .input-group {
+      margin-bottom: 20px;
+    }
+
+    .input-group label {
+      display: block;
+      color: #374151;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+    }
+
+    .input-group input:focus {
+      outline: none;
+      border-color: #3b82f6;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 12px;
+    }
+
+    button {
+      flex: 1;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-secondary {
+      background: #f3f4f6;
+      color: #374151;
+    }
+
+    .btn-secondary:hover {
+      background: #e5e7eb;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      margin-right: 8px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .success-message {
+      display: none;
+      text-align: center;
+      padding: 30px;
+    }
+
+    .success-icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+    }
+
+    .success-message h2 {
+      color: #10b981;
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+
+    .success-message p {
+      color: #6b7280;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">🔐</div>
+      <h1>Firma Digital</h1>
+      <p class="subtitle">Sistema de Gestión de Certificados CERTIA</p>
+      <span class="mock-badge">⚠ MODO SIMULACIÓN</span>
+    </div>
+
+    <div id="signForm">
+      <div class="document-info">
+        <h3>📄 Documento a Firmar</h3>
+        <div class="info-row">
+          <span class="info-label">Nombre:</span>
+          <span class="info-value">{documentName}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">ID Transacción:</span>
+          <span class="info-value">{transactionId?.substring(0, 20)}...</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Fecha:</span>
+          <span class="info-value" id="currentDate"></span>
+        </div>
+      </div>
+
+      <div class="steps">
+        <div class="step active" id="step1">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <h4>Identifícate</h4>
+            <p>Ingresa tu nombre completo</p>
+          </div>
+        </div>
+        <div class="step" id="step2">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <h4>Simular Cédula</h4>
+            <p>En producción: insertar cédula en lector</p>
+          </div>
+        </div>
+        <div class="step" id="step3">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <h4>PIN de Seguridad</h4>
+            <p>En producción: ingresar PIN real</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label>👤 Nombre Completo</label>
+        <input 
+          type="text" 
+          id="signerName" 
+          placeholder="Ej: Juan Pérez"
+          required
+        />
+      </div>
+
+      <div class="input-group">
+        <label>🔢 PIN Simulado (cualquier 4 dígitos)</label>
+        <input 
+          type="password" 
+          id="pin" 
+          placeholder="1234"
+          maxlength="4"
+          pattern="[0-9]{4}"
+          required
+        />
+      </div>
+
+      <div class="button-group">
+        <button type="button" class="btn-secondary" id="cancelBtn">
+          Cancelar
+        </button>
+        <button type="button" class="btn-primary" id="signBtn">
+          ✍️ Firmar Documento
+        </button>
+      </div>
+    </div>
+
+    <div class="success-message" id="successMessage">
+      <div class="success-icon">✅</div>
+      <h2>¡Documento Firmado!</h2>
+      <p>Redirigiendo al sistema...</p>
+    </div>
+  </div>
+
+  <script define:vars={{ transactionId, submissionId, fileName }}>
+    // Mostrar fecha actual
+    document.getElementById('currentDate').textContent = 
+      new Date().toLocaleString('es-UY');
+
+    // Botón cancelar
+    document.getElementById('cancelBtn').addEventListener('click', async () => {
+      if (confirm('¿Seguro que deseas cancelar la firma?')) {
+        window.location.href = `/company/submissions?cancelled=true&id=${submissionId}`;
+      }
+    });
+
+    // Botón firmar
+document.getElementById('signBtn').addEventListener('click', async () => {
+  const signerName = document.getElementById('signerName').value.trim();
+  const pin = document.getElementById('pin').value.trim();
+
+  if (!signerName) {
+    alert('Por favor ingresa tu nombre completo');
+    return;
+  }
+
+  if (!pin || pin.length !== 4) {
+    alert('Por favor ingresa un PIN de 4 dígitos');
+    return;
+  }
+
+  const signBtn = document.getElementById('signBtn');
+  const cancelBtn = document.getElementById('cancelBtn');
+  
+  // Deshabilitar botones
+  signBtn.disabled = true;
+  cancelBtn.disabled = true;
+  signBtn.innerHTML = '<span class="spinner"></span>Firmando...';
+
+  // Simular proceso de firma (animación de pasos)
+  await simulateSteps();
+
+  try {
+    // Llamar al backend para procesar la firma
+    const response = await fetch('/api/process-mock-signature', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        transactionId: transactionId,
+        submissionId: submissionId,
+        fileName: fileName,
+        signerName: signerName,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Error al procesar la firma');
+    }
+
+    // Mostrar mensaje de éxito
+    document.getElementById('signForm').style.display = 'none';
+    document.getElementById('successMessage').style.display = 'block';
+
+    // Redirigir después de 2 segundos usando window.location
+    setTimeout(() => {
+      window.location.href = `/company/submissions?signed=true&id=${submissionId}`;
+    }, 2000);
+
+  } catch (error) {
+    console.error('Error:', error);
+    alert('Error al firmar el documento: ' + error.message);
+    signBtn.disabled = false;
+    cancelBtn.disabled = false;
+    signBtn.innerHTML = '✍️ Firmar Documento';
+  }
+});
+
+    async function simulateSteps() {
+      // Paso 1
+      document.getElementById('step1').classList.add('completed');
+      await sleep(500);
+
+      // Paso 2
+      document.getElementById('step2').classList.add('active');
+      await sleep(1000);
+      document.getElementById('step2').classList.add('completed');
+      document.getElementById('step2').classList.remove('active');
+
+      // Paso 3
+      document.getElementById('step3').classList.add('active');
+      await sleep(1500);
+      document.getElementById('step3').classList.add('completed');
+    }
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+  </script>
+</body>
+</html>
