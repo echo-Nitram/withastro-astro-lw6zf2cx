@@ -17,8 +17,7 @@ export async function getAllUsers() {
   const usersWithEmails = await Promise.all(
     (data || []).map(async (profile) => {
       try {
-        // Nota: En producción real, esto debería hacerse en el backend
-        // Por ahora, retornamos solo el perfil
+        // Nota: en producción, esto se haría en el backend
         return {
           ...profile,
           auth_users: {
@@ -101,15 +100,30 @@ export async function updateUserProfile(
 // Eliminar usuario (solo perfil, no auth)
 export async function deleteUserProfile(userId: string) {
   // Primero eliminar submissions del usuario
-  await supabase.from('submissions').delete().eq('client_id', userId);
+  const { error: subError } = await supabase
+    .from('submissions')
+    .delete()
+    .eq('client_id', userId);
+  if (subError) {
+    throw subError;
+  }
 
   // Luego eliminar templates si es empresa
-  await supabase.from('templates').delete().eq('company_id', userId);
+  const { error: tmplError } = await supabase
+    .from('templates')
+    .delete()
+    .eq('company_id', userId);
+  if (tmplError) {
+    throw tmplError;
+  }
 
   // Finalmente eliminar perfil
-  const { error } = await supabase.from('profiles').delete().eq('id', userId);
+  const { error: profileError } = await supabase
+    .from('profiles')
+    .delete()
+    .eq('id', userId);
 
-  if (error) throw error;
+  if (profileError) throw profileError;
 }
 
 // Obtener email de un usuario (desde auth.users)
@@ -157,7 +171,6 @@ export async function createUser(
     if (authError) throw authError;
 
     // El trigger en Supabase debería crear el perfil automáticamente
-    // Esperamos un momento para que se complete
     await new Promise((resolve) => setTimeout(resolve, 500));
 
     // Si el perfil no se creó automáticamente, crearlo manualmente

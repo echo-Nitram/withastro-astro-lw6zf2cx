@@ -133,6 +133,7 @@ export async function getClientSubmissions(clientId: string) {
       `
       *,
       templates (
+        id,
         name,
         title_es
       )
@@ -214,7 +215,7 @@ export async function getCompanySubmissions(companyId: string) {
       profiles:client_id (
         username,
         full_name,
-        email:id
+        email
       )
     `
     )
@@ -232,8 +233,8 @@ export async function updateSubmissionStatus(
   notes?: string
 ) {
   const updateData: any = {
-    status,
-    reviewed_at: new Date().toISOString(),
+  status,
+  reviewed_at: new Date().toISOString(),
   };
 
   if (notes) {

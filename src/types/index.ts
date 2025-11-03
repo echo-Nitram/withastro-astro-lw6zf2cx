@@ -31,15 +31,17 @@ export interface Template {
   updated_at: string;
 }
 
-// Diseño del template
+// Diseño del template unificado
 export interface TemplateDesign {
   logo_left?: string;
   logo_right?: string;
   border_style?: 'solid' | 'double' | 'ridge' | 'none';
   border_color?: string;
   border_width?: number;
-  background_color?: string;
-  columns?: 1 | 2 | 3;
+  background_color: string;
+  background_image?: string;     // Nueva: imagen de fondo
+  background_opacity?: number;   // Nueva: opacidad de la imagen
+  columns: 1 | 2 | 3;
 }
 
 // Campo del formulario
@@ -75,13 +77,13 @@ export interface Submission {
     | 'signing'
     | 'signed'
     | 'error';
-  data: Record<string, any>; // o 'data' si usas ese nombre
+  data: Record<string, any>;
   notes?: string;
   reviewed_at?: string;
   reviewed_by?: string;
   created_at: string;
 
-  // ✨ AGREGAR ESTOS CAMPOS:
+  // Campos adicionales para firma
   signature_status?: string;
   signature_transaction_id?: string;
   signed_pdf_url?: string;
@@ -99,19 +101,6 @@ export interface Submission {
   };
 }
 
-// === TIPOS ADICIONALES PARA EL DISEÑADOR ===
-
-// Diseño del template
-export interface TemplateDesign {
-  logo_left?: string;
-  logo_right?: string;
-  background_color: string;
-  background_image?: string; // Nueva: imagen de fondo
-  background_opacity?: number; // Nueva: opacidad de la imagen
-  columns: 1 | 2 | 3;
-}
-
-// Campo individual del formulario
 export interface FormField {
   id: string;
   type:
