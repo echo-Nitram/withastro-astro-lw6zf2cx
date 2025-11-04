@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase, config } from '../lib/supabase';
 
 interface TestResult {
   type: 'success' | 'error';
@@ -18,15 +18,10 @@ export default function TestConnection() {
     setResults([]);
 
     try {
-      // Test 1: Verificar configuración
-      const url = (supabase as any).supabaseUrl;
-      const hasKey =
-        (supabase as any).supabaseKey &&
-        (supabase as any).supabaseKey.length > 20;
-
-      if (!hasKey) {
+      // Test 1: Verificar configuración usando el objeto config exportado
+      if (!config.isConfigured) {
         throw new Error(
-          'Credenciales de Supabase no configuradas en src/lib/supabase.ts'
+          'Credenciales de Supabase no configuradas en .env o src/lib/supabase.ts'
         );
       }
 
@@ -35,13 +30,17 @@ export default function TestConnection() {
         {
           type: 'success',
           title: '✅ Configuración correcta',
-          message: `URL: ${url}`,
+          message: `URL: ${config.url}`,
         },
       ]);
 
       // Test 2: Verificar autenticación
       const { data: authData, error: authError } =
         await supabase.auth.getSession();
+
+      if (authError) {
+        throw new Error(`Error de autenticación: ${authError.message}`);
+      }
 
       setResults((prev) => [
         ...prev,
@@ -77,18 +76,59 @@ export default function TestConnection() {
         },
       ]);
 
-      // Test 4: Verificar RLS (Row Level Security)
-      const { data: rlsData, error: rlsError } = await supabase.rpc('version');
+      // Test 4: Verificar que las tablas principales existen
+      const tables = ['profiles', 'templates', 'submissions', 'files'];
+      let allTablesExist = true;
 
-      if (!rlsError) {
+      for (const table of tables) {
+        const { error: tableError } = await supabase
+          .from(table)
+          .select('id', { count: 'exact', head: true })
+          .limit(1);
+
+        if (tableError) {
+          allTablesExist = false;
+          setResults((prev) => [
+            ...prev,
+            {
+              type: 'error',
+              title: `❌ Tabla "${table}" no encontrada`,
+              message: tableError.message,
+            },
+          ]);
+        }
+      }
+
+      if (allTablesExist) {
         setResults((prev) => [
           ...prev,
           {
             type: 'success',
-            title: '✅ Base de datos operacional',
-            message: 'Todas las pruebas pasaron correctamente',
+            title: '✅ Todas las tablas principales existen',
+            message: 'profiles, templates, submissions, files',
           },
         ]);
+      }
+
+      // Test 5: Verificar RLS (Row Level Security)
+      try {
+        const { data: rlsData, error: rlsError } = await supabase.rpc(
+          'version'
+        );
+
+        if (!rlsError) {
+          setResults((prev) => [
+            ...prev,
+            {
+              type: 'success',
+              title: '✅ Base de datos operacional',
+              message: 'Todas las pruebas pasaron correctamente',
+            },
+          ]);
+        }
+      } catch (rlsErr) {
+        // RPC version puede no existir, no es crítico
+        console.log('RPC version no disponible (no crítico)');
       }
 
       setStatus('✅ Todo funcionando correctamente');
@@ -106,7 +146,7 @@ export default function TestConnection() {
         error.message?.includes('relation') ||
         error.message?.includes('does not exist')
       ) {
-        errorDetails = 'La tabla "profiles" no existe en la base de datos';
+        errorDetails = 'Las tablas no existen en la base de datos';
       } else if (
         error.message?.includes('permission denied') ||
         error.message?.includes('RLS')
@@ -115,6 +155,9 @@ export default function TestConnection() {
       } else if (error.code === '42P01') {
         errorDetails =
           'Tabla no encontrada - ejecuta el script SQL de creación';
+      } else if (error.message?.includes('fetch')) {
+        errorDetails =
+          'Error de red - verifica tu conexión a internet y la URL de Supabase';
       }
 
       setResults((prev) => [
@@ -123,7 +166,7 @@ export default function TestConnection() {
           type: 'error',
           title: '❌ Error',
           message: `${errorMessage}${
-            errorDetails ? '\n\n' + errorDetails : ''
+            errorDetails ? '\n\n💡 ' + errorDetails : ''
           }`,
         },
       ]);
@@ -139,10 +182,10 @@ export default function TestConnection() {
   return (
     <div className="bg-white rounded-lg shadow-lg p-8 max-w-2xl w-full">
       <h1 className="text-3xl font-bold mb-6 text-gray-900">
-        🧪 Test de Conexión
+        🧪 Test de Conexión a Supabase
       </h1>
 
-      {/* Status */}
+      {/* Status principal */}
       <div
         className={`mb-6 p-4 rounded-lg ${
           status.includes('✅')
@@ -153,7 +196,7 @@ export default function TestConnection() {
         }`}
       >
         <p
-          className={`font-medium ${
+          className={`font-medium text-lg ${
             status.includes('✅')
               ? 'text-green-600'
               : status.includes('❌')
@@ -165,13 +208,15 @@ export default function TestConnection() {
         </p>
       </div>
 
-      {/* Results */}
+      {/* Resultados individuales */}
       <div className="space-y-4 mb-6">
         {results.map((result, index) => (
           <div
             key={index}
-            className={`p-4 rounded-lg ${
-              result.type === 'success' ? 'bg-green-50' : 'bg-red-50'
+            className={`p-4 rounded-lg border-l-4 ${
+              result.type === 'success'
+                ? 'bg-green-50 border-green-500'
+                : 'bg-red-50 border-red-500'
             }`}
           >
             <p
@@ -182,7 +227,7 @@ export default function TestConnection() {
               {result.title}
             </p>
             <p
-              className={`text-xs mt-1 ${
+              className={`text-xs mt-1 whitespace-pre-line ${
                 result.type === 'success' ? 'text-green-600' : 'text-red-600'
               }`}
             >
@@ -192,42 +237,130 @@ export default function TestConnection() {
         ))}
       </div>
 
-      {/* Botones */}
-      <div className="flex gap-4">
+      {/* Botones de acción */}
+      <div className="flex flex-wrap gap-4">
         <button
           onClick={runTests}
           disabled={loading}
-          className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 
+                   disabled:opacity-50 disabled:cursor-not-allowed transition-colors
+                   font-medium shadow-md hover:shadow-lg"
         >
           {loading ? '⏳ Probando...' : '🔄 Probar de nuevo'}
         </button>
 
         <a
           href="/"
-          className="px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 inline-block text-center"
+          className="px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 
+                   inline-flex items-center justify-center transition-colors
+                   font-medium shadow-md hover:shadow-lg"
         >
           ← Volver al inicio
         </a>
+
+        {!loading && results.length > 0 && (
+          <a
+            href="/dashboard"
+            className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 
+                     inline-flex items-center justify-center transition-colors
+                     font-medium shadow-md hover:shadow-lg"
+          >
+            Ir al Dashboard →
+          </a>
+        )}
       </div>
 
-      {/* Info adicional */}
+      {/* Información de ayuda en caso de errores */}
       {results.some((r) => r.type === 'error') && (
         <div className="mt-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-          <p className="text-sm font-medium text-yellow-800 mb-2">
-            💡 ¿Cómo solucionar?
+          <p className="text-sm font-medium text-yellow-800 mb-3">
+            💡 ¿Cómo solucionar estos errores?
           </p>
-          <ul className="text-xs text-yellow-700 space-y-1">
-            <li>
-              • Verifica tus credenciales en{' '}
-              <code className="bg-yellow-100 px-1 rounded">
-                src/lib/supabase.ts
-              </code>
+          <ul className="text-xs text-yellow-700 space-y-2">
+            <li className="flex items-start">
+              <span className="mr-2">1.</span>
+              <div>
+                Verifica tus credenciales en tu archivo{' '}
+                <code className="bg-yellow-100 px-2 py-1 rounded font-mono">
+                  .env
+                </code>
+                :
+                <div className="mt-1 bg-yellow-100 p-2 rounded font-mono text-xs">
+                  PUBLIC_SUPABASE_URL=https://xxx.supabase.co
+                  <br />
+                  PUBLIC_SUPABASE_ANON_KEY=eyJxxx...
+                </div>
+              </div>
             </li>
-            <li>• Asegúrate de que tu proyecto Supabase esté activo</li>
-            <li>• Verifica que las tablas estén creadas correctamente</li>
+            <li className="flex items-start">
+              <span className="mr-2">2.</span>
+              <span>
+                Asegúrate de que tu proyecto Supabase esté activo en{' '}
+                <a
+                  href="https://app.supabase.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-yellow-900 underline hover:text-yellow-950"
+                >
+                  app.supabase.com
+                </a>
+              </span>
+            </li>
+            <li className="flex items-start">
+              <span className="mr-2">3.</span>
+              <span>
+                Si las tablas no existen, ejecuta el script SQL{' '}
+                <code className="bg-yellow-100 px-1 rounded">
+                  01_schema_corregido.sql
+                </code>
+              </span>
+            </li>
+            <li className="flex items-start">
+              <span className="mr-2">4.</span>
+              <span>
+                Reinicia el servidor de desarrollo:{' '}
+                <code className="bg-yellow-100 px-1 rounded">
+                  npm run dev
+                </code>
+              </span>
+            </li>
           </ul>
         </div>
       )}
+
+      {/* Información adicional cuando todo funciona */}
+      {status.includes('✅') && results.every((r) => r.type === 'success') && (
+        <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <p className="text-sm font-medium text-blue-800 mb-2">
+            🎉 ¡Excelente! La conexión está funcionando perfectamente
+          </p>
+          <p className="text-xs text-blue-700">
+            Ya puedes usar el sistema CERTIA para gestionar tus certificados y
+            formularios.
+          </p>
+        </div>
+      )}
+
+      {/* Info técnica */}
+      <div className="mt-6 pt-4 border-t border-gray-200">
+        <details className="text-xs text-gray-500">
+          <summary className="cursor-pointer hover:text-gray-700 font-medium">
+            🔍 Información técnica
+          </summary>
+          <div className="mt-2 space-y-1">
+            <p>
+              <strong>Supabase URL:</strong> {config.url || 'No configurada'}
+            </p>
+            <p>
+              <strong>Configuración válida:</strong>{' '}
+              {config.isConfigured ? '✅ Sí' : '❌ No'}
+            </p>
+            <p>
+              <strong>Tests ejecutados:</strong> {results.length}
+            </p>
+          </div>
+        </details>
+      </div>
     </div>
   );
 }

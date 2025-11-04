@@ -65,14 +65,25 @@ export async function signIn(email: string, password: string) {
 
 /**
  * Registrar nuevo usuario
+ * @param email - Email del usuario
+ * @param password - Contraseña
+ * @param metadata - Datos adicionales (username, full_name, role)
  */
-export async function signUp(email: string, password: string, metadata?: any) {
+export async function signUp(
+  email: string,
+  password: string,
+  metadata?: {
+    username?: string;
+    full_name?: string;
+    role?: 'admin' | 'company' | 'client';
+  }
+) {
   try {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: metadata,
+        data: metadata || {},
         emailRedirectTo: `${
           import.meta.env.PUBLIC_APP_URL || 'http://localhost:4321'
         }/dashboard`,
@@ -151,7 +162,14 @@ export async function getProfile(userId: string) {
 /**
  * Actualizar perfil del usuario
  */
-export async function updateProfile(userId: string, updates: any) {
+export async function updateProfile(
+  userId: string,
+  updates: {
+    username?: string;
+    full_name?: string;
+    avatar_url?: string;
+  }
+) {
   try {
     const { data, error } = await supabase
       .from('profiles')
@@ -248,11 +266,73 @@ export async function getCurrentUserRole(): Promise<
   }
 }
 
+/**
+ * Verificar si el usuario es administrador
+ */
+export async function isAdmin(): Promise<boolean> {
+  try {
+    const { user } = await getCurrentUser();
+    if (!user) return false;
+
+    return await hasRole(user.id, 'admin');
+  } catch (error) {
+    console.error('Error checking admin status:', error);
+    return false;
+  }
+}
+
+/**
+ * Verificar si el usuario es empresa
+ */
+export async function isCompany(): Promise<boolean> {
+  try {
+    const { user } = await getCurrentUser();
+    if (!user) return false;
+
+    return await hasRole(user.id, 'company');
+  } catch (error) {
+    console.error('Error checking company status:', error);
+    return false;
+  }
+}
+
+/**
+ * Verificar si el usuario es cliente
+ */
+export async function isClient(): Promise<boolean> {
+  try {
+    const { user } = await getCurrentUser();
+    if (!user) return false;
+
+    return await hasRole(user.id, 'client');
+  } catch (error) {
+    console.error('Error checking client status:', error);
+    return false;
+  }
+}
+
 // ======================================
 // 📊 EXPORTAR CONFIGURACIÓN
 // ======================================
 
 export const config = {
   url: SUPABASE_URL,
+  anonKey: SUPABASE_ANON_KEY,
   isConfigured: !!(SUPABASE_URL && SUPABASE_ANON_KEY),
 };
+
+// ======================================
+// 📝 TIPOS
+// ======================================
+
+export type Profile = {
+  id: string;
+  username: string;
+  full_name: string | null;
+  role: 'admin' | 'company' | 'client';
+  avatar_url: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type UserRole = 'admin' | 'company' | 'client';
